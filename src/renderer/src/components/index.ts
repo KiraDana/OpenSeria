@@ -1,0 +1,5 @@
+export { default as Toolbar } from './Toolbar.vue'
+export { default as TabBar } from './TabBar.vue'
+export { default as ConnectionPanel } from './ConnectionPanel.vue'
+export { default as DataPanel } from './DataPanel.vue'
+export { default as StatusBar } from './StatusBar.vue'
