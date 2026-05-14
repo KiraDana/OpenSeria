@@ -112,6 +112,8 @@ export interface DataAPI {
 
 export interface UtilAPI {
   openExternal: (url: string) => Promise<void>
+  savePreset: (data: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean; error?: string }>
+  loadPreset: () => Promise<{ success: boolean; data?: string; canceled?: boolean; error?: string }>
 }
 
 export interface MenuAPI {

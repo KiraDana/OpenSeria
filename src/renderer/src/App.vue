@@ -116,6 +116,10 @@ async function handleSend(data: string, fromTabId?: string): Promise<void> {
   }
 
   if (!tab || tab.status !== 'connected' || !tab.connectionId) {
+    setCyclicSending(tab.id, false)
+    if (window.cycleSendManager?.[tab.id]) {
+      window.cycleSendManager[tab.id].isCyclicSending = false
+    }
     ElMessage.warning('请先建立连接')
     return
   }
@@ -135,6 +139,9 @@ async function handleSend(data: string, fromTabId?: string): Promise<void> {
     updateReceiveCount(tab.id, tab.receiveCount)
   } else {
     setCyclicSending(tab.id, false)
+    if (window.cycleSendManager?.[tab.id]) {
+      window.cycleSendManager[tab.id].isCyclicSending = false
+    }
     const errorMsg = '发送失败，循环发送已停止'
     currentErrorMessage.value = errorMsg
     ElMessage.error(errorMsg)

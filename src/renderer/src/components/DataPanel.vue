@@ -103,6 +103,12 @@
             >
               {{ isCyclicSending ? '停止发送' : '循环发送' }}
             </el-button>
+            <el-button size="small" text @click="exportPresets" title="导出预设">
+              <el-icon><Upload /></el-icon>
+            </el-button>
+            <el-button size="small" text @click="importPresets" title="导入预设">
+              <el-icon><Download /></el-icon>
+            </el-button>
             <el-button size="small" text @click="clearAllPresets">
               <el-icon><Delete /></el-icon>
             </el-button>
@@ -278,6 +284,40 @@ function startResize(e: MouseEvent): void {
   }, 5000)
 }
 
+async function exportPresets(): Promise<void> {
+  const data = JSON.stringify({
+    presets: presets.value,
+    presetFormats: presetFormats.value,
+    presetDelays: presetDelays.value,
+    presetSelected: presetSelected.value
+  }, null, 2)
+  const result = await window.electronAPI.util.savePreset(data)
+  if (result.success) {
+    ElMessage.success('预设已导出: ' + result.filePath)
+  } else if (!result.canceled) {
+    ElMessage.error('导出失败: ' + result.error)
+  }
+}
+
+async function importPresets(): Promise<void> {
+  const result = await window.electronAPI.util.loadPreset()
+  if (!result.success || !result.data) {
+    if (!result.canceled) ElMessage.error('导入失败: ' + result.error)
+    return
+  }
+  try {
+    const data = JSON.parse(result.data)
+    if (data.presets?.length === 99) presets.value = data.presets
+    if (data.presetFormats?.length === 99) presetFormats.value = data.presetFormats
+    if (data.presetDelays?.length === 99) presetDelays.value = data.presetDelays
+    if (data.presetSelected?.length === 99) presetSelected.value = data.presetSelected
+    syncToTab()
+    ElMessage.success('预设已导入')
+  } catch {
+    ElMessage.error('导入失败: 文件格式错误')
+  }
+}
+
 function clearAllPresets(): void {
   presets.value = Array(99).fill('')
   presetFormats.value = Array(99).fill('hex')
@@ -297,6 +337,10 @@ function toggleCyclicSend(): void {
   if (currentTabCyclic) {
     stopCyclicSend(tabId)
   } else {
+    if (props.tab?.status !== 'connected' || !props.tab?.connectionId) {
+      ElMessage.error('请先连接串口')
+      return
+    }
     startCyclicSend()
   }
 }
@@ -359,13 +403,6 @@ async function sendPresetByIndex(index: number): Promise<void> {
 async function sendPresetByIndexAndContinue(index: number, tabId: string): Promise<void> {
   const manager = window.cycleSendManager || {}
   const data = manager[tabId]
-
-  const tab = props.tab
-  if (!tab || tab.status !== 'connected' || !tab.connectionId) {
-    stopCyclicSend(tabId)
-    emit('show-error', '连接已断开，循环发送已停止')
-    return
-  }
 
   const presetsData = data?.presets || presets.value
   const formatsData = data?.formats || presetFormats.value

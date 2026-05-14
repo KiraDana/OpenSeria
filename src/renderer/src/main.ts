@@ -8,7 +8,7 @@ import {
 } from 'element-plus'
 
 import {
-  ArrowDown, ArrowRight, Close, Delete, List, Monitor, Plus, Promotion, Refresh
+  ArrowDown, ArrowRight, Close, Delete, List, Monitor, Plus, Promotion, Refresh, Upload, Download
 } from '@element-plus/icons-vue'
 
 const app = createApp(App)
@@ -22,6 +22,8 @@ app.component('Monitor', Monitor)
 app.component('Plus', Plus)
 app.component('Promotion', Promotion)
 app.component('Refresh', Refresh)
+app.component('Upload', Upload)
+app.component('Download', Download)
 
 app.use(ElButton)
 app.use(ElSelect)

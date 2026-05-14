@@ -58,6 +58,8 @@ export interface DataAPI {
 
 export interface UtilAPI {
   openExternal: (url: string) => Promise<void>
+  savePreset: (data: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean; error?: string }>
+  loadPreset: () => Promise<{ success: boolean; data?: string; canceled?: boolean; error?: string }>
 }
 
 export interface MenuAPI {
@@ -104,7 +106,9 @@ const dataAPI: DataAPI = {
 }
 
 const utilAPI: UtilAPI = {
-  openExternal: (url) => ipcRenderer.invoke('util:open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('util:open-external', url),
+  savePreset: (data) => ipcRenderer.invoke('util:save-preset', data),
+  loadPreset: () => ipcRenderer.invoke('util:load-preset')
 }
 
 const menuAPI: MenuAPI = {
