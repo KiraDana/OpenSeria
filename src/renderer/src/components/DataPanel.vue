@@ -141,7 +141,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Delete, Promotion, ArrowDown, List, Close } from '@element-plus/icons-vue'
 import type { Tab, DataFormat, DataItem } from '@/types'
 
 const props = defineProps<{
