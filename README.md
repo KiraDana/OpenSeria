@@ -1,4 +1,4 @@
-# OpenSerial - 开源跨平台串口调试工具
+# OpenSerial - 开源跨平台串口调试助手
 
 <p align="center">
   <img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version">
@@ -14,20 +14,19 @@
 
 ## 项目简介
 
-**OpenSerial** 是一款完全开源免费的跨平台串口调试工具，由嵌入式工程师为嵌入式和自动化行业量身打造。我们深知开发者在使用传统串口工具时遇到的痛点：付费软件功能受限、广告弹窗干扰、界面老旧、缺乏针对性功能、无法自定义扩展。
-
-OpenSerial 致力于为开发者提供一款纯净、高效、专业的串口调试体验，让您的开发和调试工作更加顺畅。
+OpenSerial 是嵌入式工程师打造的开源免费跨平台串口调试助手。核心特性：多窗口多串口同时连接，每个窗口独立配置波特率、校验位等参数，独立管理收发数据；无广告、无付费功能、界面现代简洁；针对嵌入式与自动化场景优化，完美替代传统老旧串口工具。
 
 ### 核心特性
 
 - ✅ **完全开源免费** - MIT 开源协议，代码透明，无任何隐藏费用
 - ✅ **跨平台支持** - 支持 Windows、macOS、Linux 主流操作系统
-- ✅ **串口通信** - 支持标准串口通信，可配置波特率、数据位、停止位、校验位等参数
-- ✅ **TCP/UDP 通信** - 内置 TCP 和 UDP 协议支持，满足网络通信调试需求
-- ✅ **循环发送** - 支持定时循环发送数据，方便进行自动化测试
-- ✅ **CRC 校验** - 内置多种 CRC 校验算法，确保数据完整性
-- ✅ **多标签页** - 支持多标签页管理，可同时调试多个连接
-- ✅ **预设管理** - 支持保存和加载常用配置，提高工作效率
+- ✅ **多窗口多串口** - 同时连接多个串口，每个窗口独立配置参数
+- ✅ **收发格式统一** - HEX/ASCII 格式切换，收发同步显示
+- ✅ **CRC 校验** - 内置 CRC8/CRC16/XOR/LRC 校验算法
+- ✅ **循环发送** - 支持定时循环发送预设数据
+- ✅ **预设管理** - 99 条预设数据槽位，每个窗口独立管理
+- ✅ **界面可折叠** - 连接参数和预设面板可折叠，最大化数据显示区
+- ✅ **无广告无付费** - 纯净体验，所有功能完全免费
 
 ---
 
@@ -60,51 +59,6 @@ OpenSerial 致力于为开发者提供一款纯净、高效、专业的串口调
 | **@electron/rebuild** | 3.6.0 | Electron 原生模块重新编译工具 |
 | **vue-tsc** | 1.8.0 | Vue 3 TypeScript 类型检查工具 |
 
-### 项目架构
-
-```
-openSerial/
-├── src/
-│   ├── main/                 # 主进程代码
-│   │   ├── app/             # 应用入口管理
-│   │   │   ├── TrayManager.ts    # 系统托盘管理
-│   │   │   ├── WindowManager.ts  # 窗口管理
-│   │   │   └── index.ts
-│   │   ├── ipc/             # 进程间通信
-│   │   │   └── index.ts
-│   │   ├── services/        # 核心服务
-│   │   │   ├── config.ts    # 配置服务
-│   │   │   ├── serial.ts    # 串口服务
-│   │   │   ├── tcp.ts       # TCP 服务
-│   │   │   └── udp.ts       # UDP 服务
-│   │   ├── utils/           # 工具函数
-│   │   │   └── crc.ts       # CRC 校验算法
-│   │   └── index.ts         # 主进程入口
-│   ├── preload/             # 预加载脚本
-│   │   └── index.ts
-│   └── renderer/            # 渲染进程代码 (前端)
-│       └── src/
-│           ├── components/  # Vue 组件
-│           │   ├── ConnectionPanel.vue   # 连接面板
-│           │   ├── DataPanel.vue          # 数据面板
-│           │   ├── StatusBar.vue          # 状态栏
-│           │   ├── TabBar.vue             # 标签栏
-│           │   └── Toolbar.vue            # 工具栏
-│           ├── composables/  # Vue Composables
-│           │   ├── useConnection.ts       # 连接逻辑
-│           │   ├── useSerial.ts           # 串口逻辑
-│           │   ├── useTcp.ts              # TCP 逻辑
-│           │   ├── useUdp.ts              # UDP 逻辑
-│           │   ├── useCyclicSend.ts       # 循环发送
-│           │   ├── usePresets.ts          # 预设管理
-│           │   └── useTabs.ts             # 标签页管理
-│           ├── types/      # TypeScript 类型定义
-│           └── App.vue      # 根组件
-├── electron.vite.config.ts  # electron-vite 配置
-├── package.json             # 项目配置和依赖
-└── tsconfig.json           # TypeScript 配置
-```
-
 ---
 
 ## 下载安装
@@ -116,7 +70,6 @@ openSerial/
    - **Windows**: `OpenSerial_x.x.x_setup.exe`
    - **macOS**: `OpenSerial-x.x.x.dmg`
    - **Linux**: `OpenSerial-x.x.x.AppImage`
-
 3. 运行安装程序，按照提示完成安装
 
 ### 方式二：从源码构建
@@ -153,35 +106,11 @@ npm install
 npm run dev
 ```
 
-项目将会在开发模式下启动，您可以在浏览器中实时预览和调试。
-
-**4. 类型检查**
+**4. 构建生产版本**
 
 ```bash
-npm run typecheck
-```
-
-运行 TypeScript 类型检查，确保代码类型安全。
-
-**5. 代码检查**
-
-```bash
-npm run lint
-```
-
-使用 ESLint 检查代码规范。
-
-**6. 构建生产版本**
-
-```bash
-# Windows
-npm run build:win
-
-# 或者通用构建命令
 npm run build
 ```
-
-构建完成后，安装包将生成在 `dist-electron` 目录下。
 
 ---
 
@@ -202,35 +131,16 @@ npm run build
 **3. 发送和接收数据**
 
 - 在数据发送区域输入要发送的数据
-- 选择发送格式（ASCII、HEX 等）
+- 选择发送格式（HEX / ASCII）
 - 点击"发送"按钮或启用循环发送
 - 接收到的数据将显示在上方的数据展示区域
 
-**4. TCP/UDP 通信**
+**4. 预设管理**
 
-- 切换到相应的协议模式
-- 输入目标 IP 地址和端口号
-- 按照相同的方式进行数据收发
-
-### 高级功能
-
-**预设管理**
-
-- 支持保存常用配置为预设
-- 快速加载预设，提高工作效率
-- 预设包含：连接参数、数据格式、发送内容等
-
-**CRC 校验**
-
-- 内置多种 CRC 校验算法
-- 自动计算和验证数据校验值
-- 确保数据传输的可靠性
-
-**循环发送**
-
-- 设置发送间隔时间
-- 自动周期性发送数据
-- 适用于自动化测试场景
+- 点击发送区的"预设"按钮打开预设面板
+- 支持 99 条预设数据槽位
+- 每条预设可独立设置格式（HEX/ASCII）和发送延迟
+- 支持循环发送选中的预设数据
 
 ---
 
@@ -242,26 +152,42 @@ npm run build
 
 ## 开发指南
 
-### 项目结构说明
+### 项目架构
 
-项目采用 electron-vite 架构，分为三个主要部分：
-
-- **Main Process (主进程)**: 负责应用生命周期管理、系统交互、原生 API 调用
-- **Preload (预加载脚本)**: 安全的桥接层，在渲染进程和主进程之间传递消息
-- **Renderer Process (渲染进程)**: 前端界面，基于 Vue 3 构建
-
-### 添加新功能
-
-1. 在 `src/renderer/src/components/` 中创建新的 Vue 组件
-2. 使用 Composable 模式管理组件逻辑（参考 `composables/` 目录）
-3. 在主进程中实现底层逻辑（`services/` 目录）
-4. 通过 IPC 进行进程间通信
-
-### 构建说明
-
-修改 `electron.vite.config.ts` 可以自定义构建配置。
-
-在 `package.json` 的 `build` 字段中可以配置打包选项，包括应用图标、安装程序设置等。
+```
+openSerial/
+├── src/
+│   ├── main/                 # 主进程代码
+│   │   ├── app/             # 应用入口管理
+│   │   │   ├── TrayManager.ts    # 系统托盘管理
+│   │   │   ├── WindowManager.ts  # 窗口管理
+│   │   │   └── index.ts
+│   │   ├── services/        # 核心服务
+│   │   │   ├── config.ts    # 配置服务
+│   │   │   ├── serial.ts    # 串口服务
+│   │   │   └── crc.ts       # CRC 校验算法
+│   │   └── index.ts         # 主进程入口
+│   ├── preload/             # 预加载脚本
+│   │   └── index.ts
+│   └── renderer/            # 渲染进程代码 (前端)
+│       └── src/
+│           ├── components/  # Vue 组件
+│           │   ├── ConnectionPanel.vue   # 连接面板
+│           │   ├── DataPanel.vue          # 数据面板
+│           │   ├── StatusBar.vue          # 状态栏
+│           │   ├── TabBar.vue             # 标签栏
+│           │   └── Toolbar.vue            # 工具栏
+│           ├── composables/  # Vue Composables
+│           │   ├── useConnection.ts       # 连接逻辑
+│           │   ├── useSerial.ts           # 串口逻辑
+│           │   ├── useCyclicSend.ts       # 循环发送
+│           │   └── useTabs.ts             # 标签页管理
+│           ├── types/      # TypeScript 类型定义
+│           └── App.vue      # 根组件
+├── electron.vite.config.ts  # electron-vite 配置
+├── package.json             # 项目配置和依赖
+└── tsconfig.json           # TypeScript 配置
+```
 
 ---
 
@@ -279,13 +205,13 @@ npm run build
 
 ## 许可证
 
-本项目基于 [MIT License](LICENSE) 开源，您可以自由使用、修改和分发本项目。
+本项目基于 [MIT License](LICENSE) 开源。
 
 ---
 
 ## 联系方式
 
-- **网站**: [www.kiradana.cn](https://www.kiradana.cn)
+- **官网**: [www.kiradana.cn](https://www.kiradana.cn)
 - **GitHub**: [https://github.com/KiraDana/OpenSeria](https://github.com/KiraDana/OpenSeria)
 
 ---
