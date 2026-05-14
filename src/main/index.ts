@@ -20,9 +20,9 @@ class MainApp {
 
   async init(): Promise<void> {
     this.setupIpcHandlers()
-    await this.windowManager.createWindow()
     this.createMenu()
-    this.trayManager.createTray()
+    await this.windowManager.createWindow()
+    setImmediate(() => this.trayManager.createTray())
   }
 
   private setupIpcHandlers(): void {
@@ -54,6 +54,36 @@ class MainApp {
 
     ipcMain.handle('crc:calculate', async (_, { data, type, byteOrder }) => {
       return CrcUtils.calculateCRC(data, type, byteOrder)
+    })
+
+    ipcMain.handle('util:save-preset', async (_, data: string) => {
+      const result = await dialog.showSaveDialog(this.windowManager.getWindow()!, {
+        title: '导出预设',
+        defaultPath: `presets_${Date.now()}.osp`,
+        filters: [
+          { name: 'OpenSerial 预设', extensions: ['osp'] },
+          { name: '所有文件', extensions: ['*'] }
+        ],
+        properties: ['createDirectory']
+      })
+      if (result.canceled) return { success: false, canceled: true }
+      fs.writeFileSync(result.filePath!, data, 'utf-8')
+      return { success: true, filePath: result.filePath }
+    })
+
+    ipcMain.handle('util:load-preset', async () => {
+      const result = await dialog.showOpenDialog(this.windowManager.getWindow()!, {
+        title: '导入预设',
+        filters: [
+          { name: 'OpenSerial 预设', extensions: ['osp'] },
+          { name: 'JSON 文件', extensions: ['json'] },
+          { name: '所有文件', extensions: ['*'] }
+        ],
+        properties: ['openFile']
+      })
+      if (result.canceled || result.filePaths.length === 0) return { success: false, canceled: true }
+      const content = fs.readFileSync(result.filePaths[0], 'utf-8')
+      return { success: true, data: content }
     })
 
     ipcMain.handle('util:open-external', async (_, url: string) => {

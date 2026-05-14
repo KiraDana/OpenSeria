@@ -83,7 +83,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import { Refresh, ArrowDown, ArrowRight } from '@element-plus/icons-vue'
 import type { Tab, ConnectionStatus, SerialConfig, SerialPortInfo } from '@/types'
 
 const props = defineProps<{

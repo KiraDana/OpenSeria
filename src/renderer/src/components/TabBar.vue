@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { Monitor, Close, Plus } from '@element-plus/icons-vue'
 import type { Tab } from '@/types'
 
 defineProps<{

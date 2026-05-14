@@ -5,7 +5,7 @@ export class TrayManager {
   private tray: Tray | null = null
 
   createTray(): void {
-    const iconPath = join(__dirname, '../../resources/icon.png')
+    const iconPath = join(app.isPackaged ? __dirname : join(__dirname, '../..'), 'src/assets/icon.ico')
     let icon: nativeImage
 
     try {
@@ -35,7 +35,7 @@ export class TrayManager {
       }
     ])
 
-    this.tray.setToolTip('OpenSerial - 串口通讯测试工具')
+    this.tray.setToolTip('OpenSerial - KiraDana')
     this.tray.setContextMenu(contextMenu)
 
     this.tray.on('click', () => {
