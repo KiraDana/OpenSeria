@@ -213,7 +213,7 @@ function setupMenuListeners(): void {
   })
 
   window.electronAPI.menu.onAbout(() => {
-    ElMessage.info('OpenSerial - 串口以太网通讯测试工具 v1.0.0')
+    ElMessage.info('OpenSerial - KiraDana v1.0.0')
   })
 }
 

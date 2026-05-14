@@ -1,7 +1,7 @@
 {
   "name": "open-serial",
   "version": "1.0.0",
-  "description": "串口以太网通讯测试工具",
+  "description": "OpenSerial - KiraDana",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -71,6 +71,7 @@
     "extraResources": [],
     "compression": "maximum",
     "asar": true,
+    "icon": "src/assets/icon.ico",
     "asarUnpack": [
       "node_modules/serialport/**/*",
       "node_modules/@serialport/**/*"

@@ -1,0 +1,7 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="48" fill="#6366f1"/>
+  <path d="M128 40L60 78L128 116L196 78L128 40Z" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 140L128 178L196 140" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M60 98L128 136L196 98" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="128" y="216" text-anchor="middle" fill="white" font-size="36" font-weight="bold" font-family="Arial, sans-serif">KiraDana</text>
+</svg>

@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, app } from 'electron'
+import { BrowserWindow, screen, app, nativeImage } from 'electron'
 import { join } from 'path'
 import { ConfigService } from '../services/config'
 
@@ -42,7 +42,13 @@ export class WindowManager {
         nodeIntegration: false
       },
       frame: true,
-      show: true
+      show: false,
+      backgroundColor: '#f8fafc',
+      icon: join(app.isPackaged ? __dirname : join(__dirname, '../..'), 'src/assets/icon.ico')
+    })
+
+    this.mainWindow.once('ready-to-show', () => {
+      this.mainWindow?.show()
     })
 
     const isDev = !app.isPackaged

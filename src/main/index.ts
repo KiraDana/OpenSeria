@@ -20,9 +20,9 @@ class MainApp {
 
   async init(): Promise<void> {
     this.setupIpcHandlers()
-    await this.windowManager.createWindow()
     this.createMenu()
-    this.trayManager.createTray()
+    await this.windowManager.createWindow()
+    setImmediate(() => this.trayManager.createTray())
   }
 
   private setupIpcHandlers(): void {
