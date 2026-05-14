@@ -43,95 +43,6 @@ export interface SerialOpenResult {
   error?: string
 }
 
-export interface TcpAPI {
-  connect: (config: TcpConfig) => Promise<TcpConnectResult>
-  disconnect: (connectionId: string) => Promise<{ success: boolean; error?: string }>
-  send: (connectionId: string, data: string) => Promise<{ success: boolean; error?: string }>
-  startServer: (config: TcpServerConfig) => Promise<TcpServerResult>
-  stopServer: (serverId: string) => Promise<{ success: boolean; error?: string }>
-  onData: (callback: (data: TcpData) => void) => void
-  onClientData: (callback: (data: TcpClientData) => void) => void
-  removeDataListener: () => void
-}
-
-export interface TcpConfig {
-  host: string
-  port: number
-  timeout?: number
-}
-
-export interface TcpServerConfig {
-  host: string
-  localPort: number
-}
-
-export interface TcpData {
-  connectionId: string
-  type: 'data' | 'error' | 'close' | 'timeout'
-  data?: string
-  error?: string
-  timestamp: number
-}
-
-export interface TcpClientData {
-  serverId: string
-  clientId: string
-  type: 'data' | 'error' | 'close'
-  data?: string
-  error?: string
-  remoteAddress?: string
-  remotePort?: number
-  timestamp: number
-}
-
-export interface TcpConnectResult {
-  success: boolean
-  connectionId?: string
-  config?: TcpConfig
-  remoteAddress?: string
-  remotePort?: number
-  error?: string
-}
-
-export interface TcpServerResult {
-  success: boolean
-  serverId?: string
-  config?: TcpServerConfig
-  localPort?: number
-  error?: string
-}
-
-export interface UdpAPI {
-  start: (config: UdpConfig) => Promise<UdpStartResult>
-  stop: (sessionId: string) => Promise<{ success: boolean; error?: string }>
-  send: (sessionId: string, data: string, address: string, port: number) => Promise<{ success: boolean; error?: string }>
-  onData: (callback: (data: UdpData) => void) => void
-  removeDataListener: () => void
-}
-
-export interface UdpConfig {
-  host: string
-  localPort: number
-  broadcast?: boolean
-}
-
-export interface UdpData {
-  sessionId: string
-  type: 'data'
-  data: string
-  remoteAddress: string
-  remotePort: number
-  timestamp: number
-}
-
-export interface UdpStartResult {
-  success: boolean
-  sessionId?: string
-  config?: UdpConfig
-  localPort?: number
-  error?: string
-}
-
 export interface ConfigAPI {
   get: (key?: string) => Promise<any>
   set: (key: string, value: any) => Promise<{ success: boolean; error?: string }>
@@ -145,6 +56,10 @@ export interface DataAPI {
   save: (content: string, defaultName?: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean; error?: string }>
 }
 
+export interface UtilAPI {
+  openExternal: (url: string) => Promise<void>
+}
+
 export interface MenuAPI {
   onNewTab: (callback: () => void) => void
   onCloseTab: (callback: () => void) => void
@@ -155,9 +70,8 @@ export interface MenuAPI {
 
 export interface ElectronAPI {
   serial: SerialAPI
-  tcp: TcpAPI
-  udp: UdpAPI
   config: ConfigAPI
+  util: UtilAPI
   crc: CrcAPI
   data: DataAPI
   menu: MenuAPI
@@ -176,36 +90,6 @@ const serialAPI: SerialAPI = {
   }
 }
 
-const tcpAPI: TcpAPI = {
-  connect: (config) => ipcRenderer.invoke('tcp:connect', config),
-  disconnect: (connectionId) => ipcRenderer.invoke('tcp:disconnect', connectionId),
-  send: (connectionId, data) => ipcRenderer.invoke('tcp:send', { connectionId, data }),
-  startServer: (config) => ipcRenderer.invoke('tcp:server-start', config),
-  stopServer: (serverId) => ipcRenderer.invoke('tcp:server-stop', serverId),
-  onData: (callback) => {
-    ipcRenderer.on('tcp:data', (_, data) => callback(data))
-  },
-  onClientData: (callback) => {
-    ipcRenderer.on('tcp:client-data', (_, data) => callback(data))
-  },
-  removeDataListener: () => {
-    ipcRenderer.removeAllListeners('tcp:data')
-    ipcRenderer.removeAllListeners('tcp:client-data')
-  }
-}
-
-const udpAPI: UdpAPI = {
-  start: (config) => ipcRenderer.invoke('udp:start', config),
-  stop: (sessionId) => ipcRenderer.invoke('udp:stop', sessionId),
-  send: (sessionId, data, address, port) => ipcRenderer.invoke('udp:send', { sessionId, data, address, port }),
-  onData: (callback) => {
-    ipcRenderer.on('udp:data', (_, data) => callback(data))
-  },
-  removeDataListener: () => {
-    ipcRenderer.removeAllListeners('udp:data')
-  }
-}
-
 const configAPI: ConfigAPI = {
   get: (key) => ipcRenderer.invoke('config:get', key),
   set: (key, value) => ipcRenderer.invoke('config:set', key, value)
@@ -219,6 +103,10 @@ const dataAPI: DataAPI = {
   save: (content, defaultName) => ipcRenderer.invoke('data:save', { content, defaultName })
 }
 
+const utilAPI: UtilAPI = {
+  openExternal: (url) => ipcRenderer.invoke('util:open-external', url)
+}
+
 const menuAPI: MenuAPI = {
   onNewTab: (callback) => ipcRenderer.on('menu:new-tab', () => callback()),
   onCloseTab: (callback) => ipcRenderer.on('menu:close-tab', () => callback()),
@@ -229,9 +117,8 @@ const menuAPI: MenuAPI = {
 
 const electronAPI: ElectronAPI = {
   serial: serialAPI,
-  tcp: tcpAPI,
-  udp: udpAPI,
   config: configAPI,
+  util: utilAPI,
   crc: crcAPI,
   data: dataAPI,
   menu: menuAPI

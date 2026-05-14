@@ -10,12 +10,13 @@
     />
 
     <div class="main-content">
-      <div class="left-panel">
+      <div class="left-panel" :class="{ collapsed: leftCollapsed }">
         <ConnectionPanel
           :tab="activeTab"
           :connection-status="currentConnectionStatus"
           @connect="handleConnect"
           @disconnect="handleDisconnect"
+          @collapse-change="leftCollapsed = $event"
         />
       </div>
       <div class="right-panel">
@@ -43,7 +44,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Toolbar, TabBar, ConnectionPanel, DataPanel, StatusBar } from '@/components'
 import { useTabs, useConnection } from '@/composables'
-import type { Tab, ConnectionType, ConnectionStatus, DataFormat, SerialConfig, TcpConfig, TcpServerConfig, UdpConfig, DataItem } from '@/types'
+import type { Tab, ConnectionType, ConnectionStatus, DataFormat, SerialConfig, DataItem } from '@/types'
 
 const {
   tabs,
@@ -65,6 +66,7 @@ const {
 
 const { connect, disconnect, send: sendData } = useConnection()
 
+const leftCollapsed = ref(false)
 const currentErrorMessage = ref('')
 
 const currentConnectionStatus = computed<ConnectionStatus>(() => {
@@ -84,7 +86,7 @@ function handleTabClose(tabId: string): void {
   closeTab(tabId)
 }
 
-async function handleConnect(config: SerialConfig | TcpConfig | TcpServerConfig | UdpConfig): Promise<void> {
+async function handleConnect(config: SerialConfig): Promise<void> {
   const tab = activeTab.value
   if (!tab) return
 
@@ -130,12 +132,6 @@ async function handleSend(data: string, fromTabId?: string): Promise<void> {
       direction: 'send'
     }
     addReceiveData(tab.id, sendItem)
-
-    const receiveItem: DataItem = {
-      data,
-      timestamp: Date.now()
-    }
-    tab.receiveData.push(receiveItem)
     updateReceiveCount(tab.id, tab.receiveCount)
   } else {
     setCyclicSending(tab.id, false)
@@ -195,45 +191,6 @@ function setupDataListeners(): void {
     }
   })
 
-  window.electronAPI.tcp.onData((data) => {
-    const tab = tabs.value.find(t => t.type === 'tcp-client' && t.connectionId === data.connectionId)
-    if (tab) {
-      addReceiveData(tab.id, {
-        data: data.data || '',
-        timestamp: data.timestamp
-      })
-      const count = (data.data || '').replace(/\s/g, '').length / 2
-      updateReceiveCount(tab.id, tab.receiveCount + count)
-    }
-  })
-
-  window.electronAPI.tcp.onClientData((data) => {
-    const tab = tabs.value.find(t => t.type === 'tcp-server' && t.connectionId === data.serverId)
-    if (tab) {
-      addReceiveData(tab.id, {
-        data: data.data || '',
-        timestamp: data.timestamp,
-        remoteAddress: data.remoteAddress,
-        remotePort: data.remotePort
-      })
-      const count = (data.data || '').replace(/\s/g, '').length / 2
-      updateReceiveCount(tab.id, tab.receiveCount + count)
-    }
-  })
-
-  window.electronAPI.udp.onData((data) => {
-    const tab = tabs.value.find(t => t.type === 'udp' && t.connectionId === data.sessionId)
-    if (tab) {
-      addReceiveData(tab.id, {
-        data: data.data,
-        timestamp: data.timestamp,
-        remoteAddress: data.remoteAddress,
-        remotePort: data.remotePort
-      })
-      const count = data.data.replace(/\s/g, '').length / 2
-      updateReceiveCount(tab.id, tab.receiveCount + count)
-    }
-  })
 }
 
 function setupMenuListeners(): void {
@@ -268,8 +225,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.electronAPI.serial.removeDataListener()
-  window.electronAPI.tcp.removeDataListener()
-  window.electronAPI.udp.removeDataListener()
 })
 
 defineOptions({
@@ -300,6 +255,16 @@ defineOptions({
   background-color: var(--secondary-bg);
   overflow-y: auto;
   flex-shrink: 0;
+  transition: width 0.2s, min-width 0.2s;
+}
+
+.left-panel.collapsed {
+  width: 32px;
+  min-width: 32px;
+}
+
+.left-panel.collapsed :deep(.connection-panel) {
+  padding: 0;
 }
 
 .right-panel {

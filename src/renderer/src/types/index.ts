@@ -9,26 +9,7 @@ export interface SerialConfig {
   xoff?: boolean
 }
 
-export interface TcpConfig {
-  host: string
-  port: number
-  timeout?: number
-}
-
-export interface TcpServerConfig {
-  host: string
-  localPort: number
-}
-
-export interface UdpConfig {
-  host: string
-  localPort: number
-  remoteAddress?: string
-  remotePort?: number
-  broadcast?: boolean
-}
-
-export type ConnectionType = 'serial' | 'tcp-client' | 'tcp-server' | 'udp'
+export type ConnectionType = 'serial'
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected'
 
@@ -45,7 +26,7 @@ export interface Tab {
   type: ConnectionType
   name: string
   status: ConnectionStatus
-  config: SerialConfig | TcpConfig | TcpServerConfig | UdpConfig
+  config: SerialConfig
   connectionId?: string
   receiveData: DataItem[]
   sendData: DataItem[]
@@ -64,9 +45,11 @@ export interface Tab {
   presetFormats: DataFormat[]
   presetDelays: number[]
   presetSelected: boolean[]
+  showTimestamp: boolean
+  presetCollapsed: boolean
 }
 
-export type DataFormat = 'hex' | 'ascii' | 'mixed' | 'string'
+export type DataFormat = 'hex' | 'ascii'
 
 export interface SerialPortInfo {
   path: string
@@ -88,59 +71,6 @@ export interface SerialOpenResult {
   success: boolean
   portId?: string
   config?: SerialConfig
-  error?: string
-}
-
-export interface TcpData {
-  connectionId: string
-  type: 'data' | 'error' | 'close' | 'timeout'
-  data?: string
-  error?: string
-  timestamp: number
-}
-
-export interface TcpClientData {
-  serverId: string
-  clientId: string
-  type: 'data' | 'error' | 'close'
-  data?: string
-  error?: string
-  remoteAddress?: string
-  remotePort?: number
-  timestamp: number
-}
-
-export interface TcpConnectResult {
-  success: boolean
-  connectionId?: string
-  config?: TcpConfig
-  remoteAddress?: string
-  remotePort?: number
-  error?: string
-}
-
-export interface TcpServerResult {
-  success: boolean
-  serverId?: string
-  config?: TcpServerConfig
-  localPort?: number
-  error?: string
-}
-
-export interface UdpData {
-  sessionId: string
-  type: 'data'
-  data: string
-  remoteAddress: string
-  remotePort: number
-  timestamp: number
-}
-
-export interface UdpStartResult {
-  success: boolean
-  sessionId?: string
-  config?: UdpConfig
-  localPort?: number
   error?: string
 }
 
@@ -167,25 +97,6 @@ export interface SerialAPI {
   removeDataListener: () => void
 }
 
-export interface TcpAPI {
-  connect: (config: TcpConfig) => Promise<TcpConnectResult>
-  disconnect: (connectionId: string) => Promise<{ success: boolean; error?: string }>
-  send: (connectionId: string, data: string) => Promise<{ success: boolean; error?: string }>
-  startServer: (config: TcpServerConfig) => Promise<TcpServerResult>
-  stopServer: (serverId: string) => Promise<{ success: boolean; error?: string }>
-  onData: (callback: (data: TcpData) => void) => void
-  onClientData: (callback: (data: TcpClientData) => void) => void
-  removeDataListener: () => void
-}
-
-export interface UdpAPI {
-  start: (config: UdpConfig) => Promise<UdpStartResult>
-  stop: (sessionId: string) => Promise<{ success: boolean; error?: string }>
-  send: (sessionId: string, data: string, address: string, port: number) => Promise<{ success: boolean; error?: string }>
-  onData: (callback: (data: UdpData) => void) => void
-  removeDataListener: () => void
-}
-
 export interface ConfigAPI {
   get: (key?: string) => Promise<any>
   set: (key: string, value: any) => Promise<{ success: boolean; error?: string }>
@@ -199,6 +110,10 @@ export interface DataAPI {
   save: (content: string, defaultName?: string) => Promise<{ success: boolean; filePath?: string; canceled?: boolean; error?: string }>
 }
 
+export interface UtilAPI {
+  openExternal: (url: string) => Promise<void>
+}
+
 export interface MenuAPI {
   onNewTab: (callback: () => void) => void
   onCloseTab: (callback: () => void) => void
@@ -209,9 +124,8 @@ export interface MenuAPI {
 
 export interface ElectronAPI {
   serial: SerialAPI
-  tcp: TcpAPI
-  udp: UdpAPI
   config: ConfigAPI
+  util: UtilAPI
   crc: CrcAPI
   data: DataAPI
   menu: MenuAPI

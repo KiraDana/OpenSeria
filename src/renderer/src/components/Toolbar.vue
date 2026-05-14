@@ -12,11 +12,22 @@
     </div>
     <div class="toolbar-right">
       <el-tag size="small" type="info">v1.0.0</el-tag>
+      <div class="kiradana-brand" @click="openKiraDana" title="www.kiradana.cn">
+        <svg class="kiradana-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="#6366f1"/>
+          <text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-weight="bold" font-family="Arial">K</text>
+        </svg>
+        <span class="kiradana-text">KiraDana</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+function openKiraDana(): void {
+  window.electronAPI.util.openExternal('https://www.kiradana.cn')
+}
+
 defineOptions({
   name: 'Toolbar'
 })
@@ -60,5 +71,30 @@ defineOptions({
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 0.5px;
+}
+
+.kiradana-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.kiradana-brand:hover {
+  opacity: 1;
+}
+
+.kiradana-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.kiradana-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6366f1;
 }
 </style>

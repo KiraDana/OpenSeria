@@ -1,4 +1,5 @@
 import { SerialPort } from 'serialport'
+import { execSync } from 'child_process'
 
 export interface SerialConfig {
   port: string
@@ -51,13 +52,60 @@ export class SerialService {
 
   static async list(): Promise<SerialPortInfo[]> {
     this.log('开始扫描串口...')
+    const registryPorts = this.listFromRegistry()
+    this.log('注册表串口:', registryPorts)
+
     try {
       const ports = await SerialPort.list()
       const portNames = ports.map(p => p.path)
-      this.log('找到串口:', portNames)
-      return ports as SerialPortInfo[]
+      this.log('PnP设备串口:', portNames)
+
+      const allNames = new Set<string>()
+      for (const p of registryPorts) allNames.add(p)
+      for (const p of portNames) allNames.add(p)
+
+      if (allNames.size === portNames.length) {
+        return ports as SerialPortInfo[]
+      }
+
+      const merged: SerialPortInfo[] = []
+      const added = new Set<string>()
+      for (const p of ports) {
+        merged.push(p as SerialPortInfo)
+        added.add(p.path)
+      }
+      for (const name of registryPorts) {
+        if (!added.has(name)) {
+          merged.push({ path: name } as SerialPortInfo)
+          added.add(name)
+        }
+      }
+
+      this.log('合并后串口:', merged.map(p => p.path))
+      return merged
     } catch (err) {
       this.error('扫描串口失败:', (err as Error).message)
+      return registryPorts.map(name => ({ path: name } as SerialPortInfo))
+    }
+  }
+
+  private static listFromRegistry(): string[] {
+    try {
+      const output = execSync(
+        'reg query HKLM\\HARDWARE\\DEVICEMAP\\SERIALCOMM',
+        { encoding: 'utf8', timeout: 3000 }
+      )
+      const ports: string[] = []
+      for (const line of output.split('\n')) {
+        const match = line.match(/(COM\d+)\s*$/i)
+        if (match) ports.push(match[1].toUpperCase())
+      }
+      return ports.sort((a, b) => {
+        const na = parseInt(a.replace('COM', ''))
+        const nb = parseInt(b.replace('COM', ''))
+        return na - nb
+      })
+    } catch {
       return []
     }
   }

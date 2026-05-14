@@ -5,11 +5,6 @@
         <div class="section-header">
           <span class="section-title">接收区</span>
           <div class="section-actions">
-            <el-select v-model="receiveFormat" size="small" style="width: 100px;">
-              <el-option value="ascii" label="ASCII" />
-              <el-option value="hex" label="HEX" />
-              <el-option value="mixed" label="混合" />
-            </el-select>
             <el-button size="small" @click="$emit('clear-receive')">
               <el-icon><Delete /></el-icon>清空
             </el-button>
@@ -23,7 +18,7 @@
           >
             <span class="receive-arrow">{{ item.direction === 'send' ? '→' : '←' }}</span>
             <span class="timestamp">{{ formatTime(item.timestamp) }}</span>
-            <span :class="['data-content', item.direction === 'send' ? 'send-data' : 'receive-data']">{{ formatData(item.data, receiveFormat) }}</span>
+            <span :class="['data-content', item.direction === 'send' ? 'send-data' : 'receive-data']">{{ formatData(item.data, sendFormat) }}</span>
           </div>
           <div v-if="!displayReceiveData.length" class="empty-hint">
             等待接收数据...
@@ -36,20 +31,20 @@
           <span class="section-title">发送区</span>
           <div class="section-actions">
             <el-select v-model="sendFormat" size="small" style="width: 100px;">
-              <el-option value="string" label="字符串" />
               <el-option value="hex" label="HEX" />
+              <el-option value="ascii" label="ASCII" />
             </el-select>
             <el-button size="small" @click="handleSaveData">
               保存数据
             </el-button>
             <el-checkbox v-model="showTimestamp" size="small">时间戳</el-checkbox>
-            <el-button size="small" @click="$emit('clear-send')">
-              <el-icon><Delete /></el-icon>清空
+            <el-button size="small" :type="!presetCollapsed ? 'primary' : ''" @click="presetCollapsed = !presetCollapsed">
+              <el-icon><List /></el-icon>预设
             </el-button>
           </div>
         </div>
 
-        <div class="crc-section">
+        <div class="crc-section" v-if="sendFormat === 'hex'">
           <el-checkbox v-model="enableCrc" size="small">追加CRC</el-checkbox>
           <el-select v-if="enableCrc" v-model="crcType" size="small" style="width: 80px;">
             <el-option value="crc8" label="CRC8" />
@@ -68,7 +63,7 @@
             v-model="sendData"
             type="textarea"
             :rows="4"
-            :placeholder="sendFormat === 'hex' ? 'AA BB CC DD' : '输入发送数据...'"
+            :placeholder="sendFormat === 'hex' ? 'AA BB CC DD' : '输入ASCII文本...'"
             @keydown.ctrl.enter="handleSend"
           />
           <el-button type="success" @click="handleSend">
@@ -79,8 +74,8 @@
     </div>
 
     <div
+      v-show="!presetCollapsed"
       class="resize-handle-v"
-      style="height: 100%;"
       @mousedown.stop="startResize"
     ></div>
 
@@ -90,22 +85,29 @@
       :style="{ width: tempWidth + 'px' }"
     ></div>
 
-    <div class="preset-section" :style="{ width: presetWidth + 'px' }">
+    <div v-show="!presetCollapsed" class="preset-section" :style="{ width: presetWidth + 'px' }">
       <div class="preset-header">
         <div class="header-title">
-          <span class="header-main">预设数据</span>
-          <el-button
-            :type="isCyclicSending ? 'danger' : 'primary'"
-            size="small"
-            @click="toggleCyclicSend"
-            :disabled="!hasSelectedPresets"
-          >
-            {{ isCyclicSending ? '停止发送' : '循环发送' }}
-          </el-button>
+          <div class="header-title-row">
+            <span class="header-main">预设数据</span>
+            <el-button size="small" text @click="presetCollapsed = true" title="关闭">
+              <el-icon><Close /></el-icon>
+            </el-button>
+          </div>
+          <div class="header-actions">
+            <el-button
+              :type="isCyclicSending ? 'danger' : 'primary'"
+              size="small"
+              @click="toggleCyclicSend"
+              :disabled="!hasSelectedPresets"
+            >
+              {{ isCyclicSending ? '停止发送' : '循环发送' }}
+            </el-button>
+            <el-button size="small" text @click="clearAllPresets">
+              <el-icon><Delete /></el-icon>
+            </el-button>
+          </div>
         </div>
-        <el-button size="small" text @click="clearAllPresets">
-          <el-icon><Delete /></el-icon>清空
-        </el-button>
       </div>
       <div class="preset-table">
         <div class="preset-table-header">
@@ -120,12 +122,12 @@
             <el-checkbox v-model="presetSelected[i - 1]" size="small" />
             <el-select v-model="presetFormats[i - 1]" size="small" class="col-format-select">
               <el-option value="hex" label="HEX" />
-              <el-option value="string" label="字符串" />
+              <el-option value="ascii" label="ASCII" />
             </el-select>
             <el-input
               v-model="presets[i - 1]"
               size="small"
-              :placeholder="presetFormats[i - 1] === 'hex' ? 'AA BB CC DD' : '输入字符串...'"
+              :placeholder="presetFormats[i - 1] === 'hex' ? 'AA BB CC DD' : '输入ASCII文本...'"
             />
             <el-input-number v-model="presetDelays[i - 1]" :min="0" :max="10000" size="small" class="col-delay-input" />
             <el-button size="small" class="row-btn" @click="sendPresetByIndex(i - 1)">{{ i }}</el-button>
@@ -139,7 +141,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Delete, Promotion } from '@element-plus/icons-vue'
+import { Delete, Promotion, ArrowDown, List, Close } from '@element-plus/icons-vue'
 import type { Tab, DataFormat, DataItem } from '@/types'
 
 const props = defineProps<{
@@ -150,12 +152,35 @@ const emit = defineEmits<{
   (e: 'send', data: string, fromTabId?: string): void
   (e: 'clear-receive'): void
   (e: 'clear-send'): void
-  (e: 'update-format', payload: { type: 'receive' | 'send'; format: DataFormat }): void
+  (e: 'update-format', payload: { type: 'send'; format: DataFormat }): void
   (e: 'show-error', message: string): void
 }>()
 
-const receiveFormat = computed(() => props.tab?.receiveFormat || 'hex')
 const sendFormat = ref<DataFormat>('hex')
+watch(() => props.tab?.sendFormat, (val) => {
+  if (val) sendFormat.value = val as DataFormat
+}, { immediate: true })
+
+function syncFromTab(): void {
+  if (!props.tab) return
+  showTimestamp.value = props.tab.showTimestamp
+  presetCollapsed.value = props.tab.presetCollapsed
+  presets.value = [...props.tab.presets]
+  presetSelected.value = [...props.tab.presetSelected]
+  presetFormats.value = [...props.tab.presetFormats] as DataFormat[]
+  presetDelays.value = [...props.tab.presetDelays]
+}
+
+function syncToTab(): void {
+  if (!props.tab) return
+  props.tab.showTimestamp = showTimestamp.value
+  props.tab.presetCollapsed = presetCollapsed.value
+  props.tab.presets = [...presets.value]
+  props.tab.presetSelected = [...presetSelected.value]
+  props.tab.presetFormats = [...presetFormats.value]
+  props.tab.presetDelays = [...presetDelays.value]
+}
+
 const showTimestamp = ref(true)
 const sendData = ref('')
 const enableCrc = ref(false)
@@ -164,9 +189,10 @@ const crcByteOrder = ref('low-first')
 const receiveAreaRef = ref<HTMLElement | null>(null)
 const presets = ref<string[]>(Array(99).fill(''))
 const presetSelected = ref<boolean[]>(Array(99).fill(false))
-const presetFormats = ref<DataFormat[]>(Array(99).fill('hex'))
+const presetFormats = ref<DataFormat[]>(Array(99).fill('ascii'))
 const presetDelays = ref<number[]>(Array(99).fill(0))
-const presetWidth = ref(280)
+const presetCollapsed = ref(true)
+const presetWidth = ref(400)
 const tempWidth = ref(280)
 const isResizingLocal = ref(false)
 
@@ -253,48 +279,12 @@ function startResize(e: MouseEvent): void {
   }, 5000)
 }
 
-async function loadPresets(): Promise<void> {
-  if (!window.electronAPI?.config) return
-  try {
-    const savedPresets = await window.electronAPI.config.get('presets')
-    if (savedPresets && savedPresets.length === 99) {
-      presets.value = savedPresets
-    }
-    const savedFormats = await window.electronAPI.config.get('presetFormats')
-    if (savedFormats && savedFormats.length === 99) {
-      presetFormats.value = savedFormats
-    }
-    const savedDelays = await window.electronAPI.config.get('presetDelays')
-    if (savedDelays && savedDelays.length === 99) {
-      presetDelays.value = savedDelays
-    }
-    const savedSelected = await window.electronAPI.config.get('presetSelected')
-    if (savedSelected && savedSelected.length === 99) {
-      presetSelected.value = savedSelected
-    }
-  } catch (e) {
-    console.error('Failed to load presets:', e)
-  }
-}
-
-async function savePresets(): Promise<void> {
-  if (!window.electronAPI?.config) return
-  try {
-    await window.electronAPI.config.set('presets', JSON.parse(JSON.stringify(presets.value)))
-    await window.electronAPI.config.set('presetFormats', JSON.parse(JSON.stringify(presetFormats.value)))
-    await window.electronAPI.config.set('presetDelays', JSON.parse(JSON.stringify(presetDelays.value)))
-    await window.electronAPI.config.set('presetSelected', JSON.parse(JSON.stringify(presetSelected.value)))
-  } catch (e) {
-    console.error('Failed to save presets:', e)
-  }
-}
-
 function clearAllPresets(): void {
   presets.value = Array(99).fill('')
   presetFormats.value = Array(99).fill('hex')
   presetDelays.value = Array(99).fill(0)
   presetSelected.value = Array(99).fill(false)
-  savePresets()
+  syncToTab()
 }
 
 function toggleCyclicSend(): void {
@@ -458,34 +448,24 @@ function formatTime(timestamp: number): string {
 function formatData(data: string, format: DataFormat): string {
   if (!data) return ''
 
+  if (format === 'hex') {
+    return data.replace(/\s/g, '').match(/.{1,2}/g)?.join(' ') || data
+  }
+
   if (format === 'ascii') {
     try {
       const hex = data.replace(/\s/g, '')
       const str: string[] = []
       for (let i = 0; i < hex.length; i += 2) {
-        str.push(String.fromCharCode(parseInt(hex.substring(i, i + 2), 16)))
+        const code = parseInt(hex.substring(i, i + 2), 16)
+        str.push(code >= 32 && code <= 126 ? String.fromCharCode(code) : '.')
       }
       return str.join('')
     } catch {
       return data
     }
-  } else if (format === 'hex') {
-    return data.replace(/\s/g, '').match(/.{1,2}/g)?.join(' ') || data
-  } else if (format === 'mixed') {
-    try {
-      const hex = data.replace(/\s/g, '')
-      const ascii: string[] = []
-      const hexStr: string[] = []
-      for (let i = 0; i < hex.length; i += 2) {
-        const byte = parseInt(hex.substring(i, i + 2), 16)
-        hexStr.push(byte.toString(16).toUpperCase().padStart(2, '0'))
-        ascii.push(byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.')
-      }
-      return `${hexStr.join(' ')}  ${ascii.join('')}`
-    } catch {
-      return data
-    }
   }
+
   return data
 }
 
@@ -496,9 +476,15 @@ async function handleSend(): Promise<void> {
 
   if (sendFormat.value === 'hex') {
     dataToSend = dataToSend.replace(/\s/g, '')
+  } else {
+    const arr: string[] = []
+    for (let i = 0; i < dataToSend.length; i++) {
+      arr.push(dataToSend.charCodeAt(i).toString(16).padStart(2, '0'))
+    }
+    dataToSend = arr.join('')
   }
 
-  if (enableCrc.value && sendFormat.value === 'hex') {
+  if (enableCrc.value) {
     try {
       const crc = await window.electronAPI.crc.calculate(dataToSend, crcType.value, crcByteOrder.value)
       dataToSend = dataToSend + crc
@@ -517,9 +503,10 @@ async function handleSaveData(): Promise<void> {
   }
 
   const content = props.tab.receiveData.map((item: DataItem) => {
+    const dir = item.direction === 'send' ? '→' : '←'
     const time = formatTime(item.timestamp)
     const data = formatData(item.data, 'hex')
-    return `${time}  ${data}`
+    return `${dir} ${time}  ${data}`
   }).join('\n')
 
   const result = await window.electronAPI.data.save(content, `receive_data_${Date.now()}.txt`)
@@ -541,16 +528,16 @@ watch(() => props.tab?.receiveData, async () => {
   })
 }, { deep: true })
 
-watch(receiveFormat, (newVal) => {
-  emit('update-format', { type: 'receive', format: newVal as DataFormat })
-})
-
 watch(sendFormat, (newVal) => {
   emit('update-format', { type: 'send', format: newVal as DataFormat })
 })
 
+watch(() => props.tab, () => {
+  syncFromTab()
+}, { deep: false })
+
 watch([presets, presetFormats, presetDelays, presetSelected], () => {
-  savePresets()
+  syncToTab()
 }, { deep: true })
 
 watch(() => props.tab?.isCyclicSending, (newVal, oldVal) => {
@@ -567,7 +554,7 @@ watch(() => props.tab?.isCyclicSending, (newVal, oldVal) => {
 })
 
 onMounted(() => {
-  loadPresets()
+  syncFromTab()
 })
 
 defineOptions({
@@ -722,6 +709,28 @@ defineOptions({
   background-color: rgba(64, 158, 255, 0.2);
 }
 
+.preset-collapsed-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: all 0.2s;
+  user-select: none;
+  padding: 0 4px;
+}
+
+.preset-collapsed-trigger:hover {
+  background-color: var(--primary-bg);
+  color: var(--primary-accent);
+}
+
+.preset-collapsed-trigger .el-icon {
+  font-size: 14px;
+}
+
 .preset-header {
   display: flex;
   justify-content: space-between;
@@ -816,6 +825,18 @@ defineOptions({
 .header-title {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 

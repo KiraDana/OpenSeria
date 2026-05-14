@@ -16,10 +16,6 @@ export interface AppConfig {
     parity?: string
     stopBits?: number
   }
-  tcp?: {
-    lastHost?: string
-    lastPort?: number
-  }
   presets?: string[]
   presetFormats?: string[]
   presetDelays?: number[]
@@ -57,10 +53,6 @@ export class ConfigService {
         dataBits: 8,
         parity: 'none',
         stopBits: 1
-      },
-      tcp: {
-        lastHost: '127.0.0.1',
-        lastPort: 8080
       },
       presets: Array(99).fill(''),
       presetFormats: Array(99).fill('hex'),

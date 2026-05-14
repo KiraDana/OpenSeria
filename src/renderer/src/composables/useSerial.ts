@@ -21,7 +21,8 @@ export function useSerial() {
   }
 
   async function open(config: SerialConfig): Promise<SerialOpenResult> {
-    return await window.electronAPI.serial.open(config)
+    const plain = JSON.parse(JSON.stringify(config))
+    return await window.electronAPI.serial.open(plain)
   }
 
   async function close(portId: string): Promise<{ success: boolean; error?: string }> {

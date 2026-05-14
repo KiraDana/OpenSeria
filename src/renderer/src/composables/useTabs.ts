@@ -1,5 +1,5 @@
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
-import type { Tab, ConnectionType, ConnectionStatus, DataItem, SerialConfig, TcpConfig, TcpServerConfig, UdpConfig, DataFormat } from '@/types'
+import type { Tab, ConnectionType, ConnectionStatus, DataItem, SerialConfig, DataFormat } from '@/types'
 
 let tabCounter = 0
 
@@ -37,7 +37,9 @@ export function useTabs() {
       presets: Array(99).fill(''),
       presetFormats: Array(99).fill('hex'),
       presetDelays: Array(99).fill(0),
-      presetSelected: Array(99).fill(false)
+      presetSelected: Array(99).fill(false),
+      showTimestamp: true,
+      presetCollapsed: true
     }
 
     tabs.value.push(newTab)
@@ -46,36 +48,13 @@ export function useTabs() {
     return newTab
   }
 
-  function getDefaultConfig(type: ConnectionType): SerialConfig | TcpConfig | TcpServerConfig | UdpConfig {
-    switch (type) {
-      case 'serial':
-        return {
-          port: '',
-          baudRate: 115200,
-          dataBits: 8,
-          parity: 'none',
-          stopBits: 1
-        }
-      case 'tcp-client':
-        return {
-          host: '127.0.0.1',
-          port: 8080
-        }
-      case 'tcp-server':
-        return {
-          host: '0.0.0.0',
-          localPort: 8080
-        }
-      case 'udp':
-        return {
-          host: '0.0.0.0',
-          localPort: 8080,
-          remoteAddress: '127.0.0.1',
-          remotePort: 8080,
-          broadcast: false
-        }
-      default:
-        return {} as any
+  function getDefaultConfig(type: ConnectionType): SerialConfig {
+    return {
+      port: '',
+      baudRate: 115200,
+      dataBits: 8,
+      parity: 'none',
+      stopBits: 1
     }
   }
 

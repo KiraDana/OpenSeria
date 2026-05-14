@@ -7,9 +7,7 @@
         :class="['tab-item', { active: tab.id === activeTab }]"
         @click="$emit('tab-change', tab.id)"
       >
-        <el-icon v-if="tab.type === 'serial'"><Monitor /></el-icon>
-        <el-icon v-else-if="tab.type === 'tcp-client' || tab.type === 'tcp-server'"><Connection /></el-icon>
-        <el-icon v-else><Promotion /></el-icon>
+        <el-icon><Monitor /></el-icon>
         <span class="tab-name">{{ tab.name }}</span>
         <span :class="['status-dot', tab.status]"></span>
         <el-icon class="close-btn" @click.stop="$emit('tab-close', tab.id)"><Close /></el-icon>
@@ -22,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { Monitor, Connection, Promotion, Close, Plus } from '@element-plus/icons-vue'
+import { Monitor, Close, Plus } from '@element-plus/icons-vue'
 import type { Tab } from '@/types'
 
 defineProps<{

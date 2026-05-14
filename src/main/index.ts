@@ -1,11 +1,9 @@
-import { app, BrowserWindow, ipcMain, Menu, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, dialog, shell } from 'electron'
 import { join } from 'path'
 import * as fs from 'fs'
 import { WindowManager } from './app/WindowManager'
 import { TrayManager } from './app/TrayManager'
 import { SerialService } from './services/serial'
-import { TcpService } from './services/tcp'
-import { UdpService } from './services/udp'
 import { ConfigService } from './services/config'
 import { CrcUtils } from './utils/crc'
 
@@ -46,44 +44,6 @@ class MainApp {
       return await SerialService.send(portId, data)
     })
 
-    ipcMain.handle('tcp:connect', async (_, config) => {
-      return await TcpService.connect(config, (data) => {
-        this.windowManager.sendToRenderer('tcp:data', data)
-      })
-    })
-
-    ipcMain.handle('tcp:disconnect', async (_, connectionId) => {
-      return TcpService.disconnect(connectionId)
-    })
-
-    ipcMain.handle('tcp:send', async (_, { connectionId, data }) => {
-      return TcpService.send(connectionId, data)
-    })
-
-    ipcMain.handle('tcp:server-start', async (_, config) => {
-      return await TcpService.startServer(config, (data) => {
-        this.windowManager.sendToRenderer('tcp:client-data', data)
-      })
-    })
-
-    ipcMain.handle('tcp:server-stop', async (_, serverId) => {
-      return TcpService.stopServer(serverId)
-    })
-
-    ipcMain.handle('udp:start', async (_, config) => {
-      return await UdpService.start(config, (data) => {
-        this.windowManager.sendToRenderer('udp:data', data)
-      })
-    })
-
-    ipcMain.handle('udp:stop', async (_, sessionId) => {
-      return UdpService.stop(sessionId)
-    })
-
-    ipcMain.handle('udp:send', async (_, { sessionId, data, address, port }) => {
-      return UdpService.send(sessionId, data, address, port)
-    })
-
     ipcMain.handle('config:get', async (_, key) => {
       return this.configService.get(key)
     })
@@ -94,6 +54,10 @@ class MainApp {
 
     ipcMain.handle('crc:calculate', async (_, { data, type, byteOrder }) => {
       return CrcUtils.calculateCRC(data, type, byteOrder)
+    })
+
+    ipcMain.handle('util:open-external', async (_, url: string) => {
+      await shell.openExternal(url)
     })
 
     ipcMain.handle('data:save', async (_, { content, defaultName }) => {
@@ -209,8 +173,6 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (mainApp) {
     SerialService.closeAll()
-    TcpService.closeAll()
-    UdpService.closeAll()
   }
   if (process.platform !== 'darwin') {
     app.quit()
