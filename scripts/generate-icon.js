@@ -1,8 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
-const W = 32, H = 32
-const cx = W / 2, cy = H / 2, r = W / 2 - 2
+const W = 256, H = 256
+const cx = W / 2, cy = H / 2, r = W / 2 - 8
 
 const andRowStride = Math.ceil(W / 32) * 4
 const andMaskSize = andRowStride * H
@@ -18,8 +18,8 @@ buf.writeUInt16LE(0, off); off += 2
 buf.writeUInt16LE(1, off); off += 2
 buf.writeUInt16LE(1, off); off += 2
 
-buf.writeUInt8(W, off); off += 1
-buf.writeUInt8(H, off); off += 1
+buf.writeUInt8(0, off); off += 1
+buf.writeUInt8(0, off); off += 1
 buf.writeUInt8(0, off); off += 1
 buf.writeUInt8(0, off); off += 1
 buf.writeUInt16LE(1, off); off += 2
@@ -39,10 +39,11 @@ buf.writeInt32LE(0, off); off += 4
 buf.writeUInt32LE(0, off); off += 4
 buf.writeUInt32LE(0, off); off += 4
 
+const r2 = r * r
 for (let y = H - 1; y >= 0; y--) {
   for (let x = 0; x < W; x++) {
     const dx = x - cx, dy = y - cy
-    if (dx * dx + dy * dy <= r * r) {
+    if (dx * dx + dy * dy <= r2) {
       buf[off] = 241; off += 1
       buf[off] = 102; off += 1
       buf[off] = 99;  off += 1
