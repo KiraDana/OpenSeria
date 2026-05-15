@@ -3,10 +3,10 @@
     <div class="main-content">
       <div class="receive-section">
         <div class="section-header">
-          <span class="section-title">接收区</span>
+          <span class="section-title">{{ i18n.t('receiveArea') }}</span>
           <div class="section-actions">
             <el-button size="small" @click="$emit('clear-receive')">
-              <el-icon><Delete /></el-icon>清空
+              <el-icon><Delete /></el-icon>{{ i18n.t('clear') }}
             </el-button>
           </div>
         </div>
@@ -21,40 +21,40 @@
             <span :class="['data-content', item.direction === 'send' ? 'send-data' : 'receive-data']">{{ formatData(item.data, sendFormat) }}</span>
           </div>
           <div v-if="!displayReceiveData.length" class="empty-hint">
-            等待接收数据...
+            {{ i18n.t('waitingData') }}
           </div>
         </div>
       </div>
 
       <div class="send-section">
         <div class="section-header">
-          <span class="section-title">发送区</span>
+          <span class="section-title">{{ i18n.t('sendArea') }}</span>
           <div class="section-actions">
             <el-select v-model="sendFormat" size="small" style="width: 100px;">
-              <el-option value="hex" label="HEX" />
-              <el-option value="ascii" label="ASCII" />
+              <el-option value="hex" :label="i18n.t('hex')" />
+              <el-option value="ascii" :label="i18n.t('ascii')" />
             </el-select>
             <el-button size="small" @click="handleSaveData">
-              保存数据
+              {{ i18n.t('saveData') }}
             </el-button>
-            <el-checkbox v-model="showTimestamp" size="small">时间戳</el-checkbox>
+            <el-checkbox v-model="showTimestamp" size="small">{{ i18n.t('timestamp') }}</el-checkbox>
             <el-button size="small" :type="!presetCollapsed ? 'primary' : ''" @click="presetCollapsed = !presetCollapsed">
-              <el-icon><List /></el-icon>预设
+              <el-icon><List /></el-icon>{{ i18n.t('preset') }}
             </el-button>
           </div>
         </div>
 
         <div class="crc-section" v-if="sendFormat === 'hex'">
-          <el-checkbox v-model="enableCrc" size="small">追加CRC</el-checkbox>
+          <el-checkbox v-model="enableCrc" size="small">{{ i18n.t('appendCrc') }}</el-checkbox>
           <el-select v-if="enableCrc" v-model="crcType" size="small" style="width: 80px;">
-            <el-option value="crc8" label="CRC8" />
-            <el-option value="crc16" label="CRC16" />
-            <el-option value="xor" label="XOR" />
-            <el-option value="lrc" label="LRC" />
+            <el-option value="crc8" :label="i18n.t('crc8')" />
+            <el-option value="crc16" :label="i18n.t('crc16')" />
+            <el-option value="xor" :label="i18n.t('xor')" />
+            <el-option value="lrc" :label="i18n.t('lrc')" />
           </el-select>
           <el-select v-if="enableCrc && crcType === 'crc16'" v-model="crcByteOrder" size="small" style="width: 100px;">
-            <el-option value="high-first" label="高字节先" />
-            <el-option value="low-first" label="低字节先" />
+            <el-option value="high-first" :label="i18n.t('highFirst')" />
+            <el-option value="low-first" :label="i18n.t('lowFirst')" />
           </el-select>
         </div>
 
@@ -63,11 +63,11 @@
             v-model="sendData"
             type="textarea"
             :rows="4"
-            :placeholder="sendFormat === 'hex' ? 'AA BB CC DD' : '输入ASCII文本...'"
+            :placeholder="sendFormat === 'hex' ? i18n.t('placeholderHex') : i18n.t('placeholderAscii')"
             @keydown.ctrl.enter="handleSend"
           />
           <el-button type="success" @click="handleSend">
-            <el-icon><Promotion /></el-icon>发送
+            <el-icon><Promotion /></el-icon>{{ i18n.t('send') }}
           </el-button>
         </div>
       </div>
@@ -89,8 +89,8 @@
       <div class="preset-header">
         <div class="header-title">
           <div class="header-title-row">
-            <span class="header-main">预设数据</span>
-            <el-button size="small" text @click="presetCollapsed = true" title="关闭">
+            <span class="header-main">{{ i18n.t('presetData') }}</span>
+            <el-button size="small" text @click="presetCollapsed = true" :title="i18n.t('collapse')">
               <el-icon><Close /></el-icon>
             </el-button>
           </div>
@@ -101,12 +101,12 @@
               @click="toggleCyclicSend"
               :disabled="!hasSelectedPresets"
             >
-              {{ isCyclicSending ? '停止发送' : '循环发送' }}
+              {{ isCyclicSending ? i18n.t('stopSend') : i18n.t('cyclicSend') }}
             </el-button>
-            <el-button size="small" text @click="exportPresets" title="导出预设">
+            <el-button size="small" text @click="exportPresets" :title="i18n.t('exportPreset')">
               <el-icon><Upload /></el-icon>
             </el-button>
-            <el-button size="small" text @click="importPresets" title="导入预设">
+            <el-button size="small" text @click="importPresets" :title="i18n.t('importPreset')">
               <el-icon><Download /></el-icon>
             </el-button>
             <el-button size="small" text @click="clearAllPresets">
@@ -118,22 +118,22 @@
       <div class="preset-table">
         <div class="preset-table-header">
           <span class="col-checkbox"></span>
-          <span class="col-format">格式</span>
-          <span class="col-data">预设数据</span>
-          <span class="col-delay">延迟(ms)</span>
-          <span class="col-btn">点击发送</span>
+          <span class="col-format">{{ i18n.t('format') }}</span>
+          <span class="col-data">{{ i18n.t('data') }}</span>
+          <span class="col-delay">{{ i18n.t('delay') }}</span>
+          <span class="col-btn">{{ i18n.t('clickToSend') }}</span>
         </div>
         <div class="preset-table-body">
           <div v-for="i in 99" :key="i" class="preset-row">
             <el-checkbox v-model="presetSelected[i - 1]" size="small" />
             <el-select v-model="presetFormats[i - 1]" size="small" class="col-format-select">
-              <el-option value="hex" label="HEX" />
-              <el-option value="ascii" label="ASCII" />
+              <el-option value="hex" :label="i18n.t('hex')" />
+              <el-option value="ascii" :label="i18n.t('ascii')" />
             </el-select>
             <el-input
               v-model="presets[i - 1]"
               size="small"
-              :placeholder="presetFormats[i - 1] === 'hex' ? 'AA BB CC DD' : '输入ASCII文本...'"
+              :placeholder="presetFormats[i - 1] === 'hex' ? i18n.t('placeholderHex') : i18n.t('placeholderAscii')"
             />
             <el-input-number v-model="presetDelays[i - 1]" :min="0" :max="10000" size="small" class="col-delay-input" />
             <el-button size="small" class="row-btn" @click="sendPresetByIndex(i - 1)">{{ i }}</el-button>
@@ -147,6 +147,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { i18n } from '@/composables/useI18n'
 import type { Tab, DataFormat, DataItem } from '@/types'
 
 const props = defineProps<{
@@ -293,16 +294,16 @@ async function exportPresets(): Promise<void> {
   }, null, 2)
   const result = await window.electronAPI.util.savePreset(data)
   if (result.success) {
-    ElMessage.success('预设已导出: ' + result.filePath)
+    ElMessage.success(i18n.t('exportSuccess') + result.filePath)
   } else if (!result.canceled) {
-    ElMessage.error('导出失败: ' + result.error)
+    ElMessage.error(i18n.t('exportFailed') + result.error)
   }
 }
 
 async function importPresets(): Promise<void> {
   const result = await window.electronAPI.util.loadPreset()
   if (!result.success || !result.data) {
-    if (!result.canceled) ElMessage.error('导入失败: ' + result.error)
+    if (!result.canceled) ElMessage.error(i18n.t('importFailed') + result.error)
     return
   }
   try {
@@ -312,9 +313,9 @@ async function importPresets(): Promise<void> {
     if (data.presetDelays?.length === 99) presetDelays.value = data.presetDelays
     if (data.presetSelected?.length === 99) presetSelected.value = data.presetSelected
     syncToTab()
-    ElMessage.success('预设已导入')
+    ElMessage.success(i18n.t('importSuccess'))
   } catch {
-    ElMessage.error('导入失败: 文件格式错误')
+    ElMessage.error(i18n.t('importFormatError'))
   }
 }
 
@@ -338,7 +339,7 @@ function toggleCyclicSend(): void {
     stopCyclicSend(tabId)
   } else {
     if (props.tab?.status !== 'connected' || !props.tab?.connectionId) {
-      ElMessage.error('请先连接串口')
+      ElMessage.error(i18n.t('connectSerial'))
       return
     }
     startCyclicSend()
@@ -534,7 +535,7 @@ async function handleSend(): Promise<void> {
 
 async function handleSaveData(): Promise<void> {
   if (!props.tab?.receiveData || props.tab.receiveData.length === 0) {
-    ElMessage.warning('没有数据可保存')
+    ElMessage.warning(i18n.t('noDataToSave'))
     return
   }
 
@@ -548,9 +549,9 @@ async function handleSaveData(): Promise<void> {
   const result = await window.electronAPI.data.save(content, `receive_data_${Date.now()}.txt`)
 
   if (result.success) {
-    ElMessage.success('数据已保存到: ' + result.filePath)
+    ElMessage.success(i18n.t('dataSaved') + result.filePath)
   } else if (!result.canceled) {
-    ElMessage.error('保存失败: ' + result.error)
+    ElMessage.error(i18n.t('saveFailed') + result.error)
   }
 }
 

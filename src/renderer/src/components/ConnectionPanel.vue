@@ -1,18 +1,18 @@
 <template>
   <div class="connection-panel">
-    <div v-if="collapsed" class="panel-collapsed-trigger" @click="collapsed = false" title="展开参数">
+    <div v-if="collapsed" class="panel-collapsed-trigger" @click="collapsed = false" :title="i18n.t('expand')">
       <el-icon><ArrowRight /></el-icon>
     </div>
     <template v-else>
     <div class="panel-title">
-      <span>连接参数</span>
+      <span>{{ i18n.t('connectionParams') }}</span>
       <el-button size="small" text @click="collapsed = true">
         <el-icon><ArrowDown /></el-icon>
       </el-button>
     </div>
     <el-form label-width="80px" size="small">
-        <el-form-item label="串口号">
-          <el-select v-model="localConfig.port" placeholder="选择串口" :disabled="connectionStatus === 'connected'" popper-class="serial-port-popper">
+        <el-form-item :label="i18n.t('serialPort')">
+          <el-select v-model="localConfig.port" :placeholder="i18n.t('selectPort')" :disabled="connectionStatus === 'connected'" popper-class="serial-port-popper">
             <el-option
               v-for="port in availablePorts"
               :key="port.path"
@@ -22,13 +22,13 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="波特率">
+        <el-form-item :label="i18n.t('baudRate')">
           <el-select v-model="localConfig.baudRate" :disabled="connectionStatus === 'connected'">
             <el-option v-for="rate in baudRates" :key="rate" :label="rate.toString()" :value="rate" />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="数据位">
+        <el-form-item :label="i18n.t('dataBits')">
           <el-select v-model="localConfig.dataBits" :disabled="connectionStatus === 'connected'">
             <el-option :value="5" label="5" />
             <el-option :value="6" label="6" />
@@ -37,15 +37,15 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="校验位">
+        <el-form-item :label="i18n.t('parity')">
           <el-select v-model="localConfig.parity" :disabled="connectionStatus === 'connected'">
-            <el-option value="none" label="无" />
-            <el-option value="odd" label="奇校验" />
-            <el-option value="even" label="偶校验" />
+            <el-option value="none" :label="i18n.t('parityNone')" />
+            <el-option value="odd" :label="i18n.t('parityOdd')" />
+            <el-option value="even" :label="i18n.t('parityEven')" />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="停止位">
+        <el-form-item :label="i18n.t('stopBits')">
           <el-select v-model="localConfig.stopBits" :disabled="connectionStatus === 'connected'">
             <el-option :value="1" label="1" />
             <el-option :value="1.5" label="1.5" />
@@ -60,21 +60,21 @@
           @click="handleConnect"
           :disabled="!canConnect"
         >
-          打开/连接
+          {{ i18n.t('connect') }}
         </el-button>
         <el-button
           v-else
           type="danger"
           @click="$emit('disconnect')"
         >
-          关闭
+          {{ i18n.t('disconnect') }}
         </el-button>
       </el-form-item>
     </el-form>
 
       <div class="refresh-ports">
         <el-button size="small" @click="refreshPorts" :loading="isRefreshing">
-          <el-icon><Refresh /></el-icon>刷新串口
+          <el-icon><Refresh /></el-icon>{{ i18n.t('refreshPort') }}
         </el-button>
       </div>
     </template>
@@ -83,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
+import { i18n } from '@/composables/useI18n'
 import type { Tab, ConnectionStatus, SerialConfig, SerialPortInfo } from '@/types'
 
 const props = defineProps<{

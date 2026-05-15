@@ -12,6 +12,9 @@
     </div>
     <div class="toolbar-right">
       <el-tag size="small" type="info">v1.0.0</el-tag>
+      <el-button class="lang-toggle" size="small" @click="toggleLang" :title="i18n.language === 'zh' ? 'Switch to English' : '切换到中文'">
+        {{ i18n.language === 'zh' ? '中' : 'EN' }}
+      </el-button>
       <div class="kiradana-brand" @click="openKiraDana" title="www.kiradana.cn">
         <svg class="kiradana-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="32" height="32" rx="6" fill="#6366f1"/>
@@ -24,8 +27,14 @@
 </template>
 
 <script setup lang="ts">
+import { i18n } from '@/composables/useI18n'
+
 function openKiraDana(): void {
   window.electronAPI.util.openExternal('https://www.kiradana.cn')
+}
+
+function toggleLang(): void {
+  i18n.toggleLanguage()
 }
 
 defineOptions({
@@ -96,5 +105,16 @@ defineOptions({
   font-size: 13px;
   font-weight: 600;
   color: #6366f1;
+}
+
+.lang-toggle {
+  font-weight: 600;
+  min-width: 40px;
+  background: transparent;
+  border: none;
+}
+
+.lang-toggle:hover {
+  background: transparent;
 }
 </style>

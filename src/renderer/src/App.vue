@@ -43,7 +43,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Toolbar, TabBar, ConnectionPanel, DataPanel, StatusBar } from '@/components'
-import { useTabs, useConnection } from '@/composables'
+import { useTabs, useConnection, i18n } from '@/composables'
 import type { Tab, ConnectionType, ConnectionStatus, DataFormat, SerialConfig, DataItem } from '@/types'
 
 const {
@@ -120,7 +120,7 @@ async function handleSend(data: string, fromTabId?: string): Promise<void> {
     if (window.cycleSendManager?.[tab.id]) {
       window.cycleSendManager[tab.id].isCyclicSending = false
     }
-    ElMessage.warning('请先建立连接')
+    ElMessage.warning(i18n.t('connectFirst'))
     return
   }
 
@@ -142,7 +142,7 @@ async function handleSend(data: string, fromTabId?: string): Promise<void> {
     if (window.cycleSendManager?.[tab.id]) {
       window.cycleSendManager[tab.id].isCyclicSending = false
     }
-    const errorMsg = '发送失败，循环发送已停止'
+    const errorMsg = i18n.t('cyclicSendStopped')
     currentErrorMessage.value = errorMsg
     ElMessage.error(errorMsg)
   }
@@ -182,8 +182,8 @@ function setupDataListeners(): void {
       if (tab) {
         setCyclicSending(tab.id, false)
         updateTabStatus(tab.id, 'disconnected', undefined)
-        currentErrorMessage.value = '串口连接断开: ' + data.data
-        ElMessage.error('串口连接断开: ' + data.data)
+        currentErrorMessage.value = i18n.t('portDisconnected') + data.data
+        ElMessage.error(i18n.t('portDisconnected') + data.data)
       }
       return
     }
@@ -220,7 +220,7 @@ function setupMenuListeners(): void {
   })
 
   window.electronAPI.menu.onAbout(() => {
-    ElMessage.info('OpenSerial - KiraDana v1.0.0')
+    ElMessage.info(i18n.t('about'))
   })
 }
 

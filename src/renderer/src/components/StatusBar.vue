@@ -18,11 +18,11 @@
 
     <div class="status-right">
       <span class="status-item">
-        <span class="receive-label">接收:</span>
+        <span class="receive-label">{{ i18n.t('receive') }}:</span>
         <span class="receive-count">{{ formatCount(tab?.receiveCount || 0) }}</span>
       </span>
       <span class="status-item">
-        <span class="send-label">发送:</span>
+        <span class="send-label">{{ i18n.t('send') }}:</span>
         <span class="send-count">{{ formatCount(tab?.sendCount || 0) }}</span>
       </span>
     </div>
@@ -31,6 +31,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { i18n } from '@/composables/useI18n'
 import type { Tab, ConnectionStatus } from '@/types'
 
 const props = defineProps<{
@@ -42,11 +43,11 @@ const props = defineProps<{
 const statusText = computed(() => {
   switch (props.connectionStatus) {
     case 'connected':
-      return '已连接'
+      return i18n.t('statusConnected')
     case 'connecting':
-      return '连接中...'
+      return i18n.t('statusConnecting')
     default:
-      return '未连接'
+      return i18n.t('statusDisconnected')
   }
 })
 
