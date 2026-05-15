@@ -1,5 +1,5 @@
 import { ref, computed, type Ref, type ComputedRef } from 'vue'
-import type { Tab, ConnectionType, ConnectionStatus, DataItem, SerialConfig, DataFormat } from '@/types'
+import type { Tab, ConnectionType, ConnectionStatus, DataItem, SerialConfig, DataFormat, AutoReconnectConfig } from '@/types'
 
 let tabCounter = 0
 
@@ -39,7 +39,13 @@ export function useTabs() {
       presetDelays: Array(99).fill(0),
       presetSelected: Array(99).fill(false),
       showTimestamp: true,
-      presetCollapsed: true
+      presetCollapsed: true,
+      receivingPaused: false,
+      frozenReceiveData: [],
+      searchQuery: '',
+      filterDirection: 'all',
+      currentMatchIndex: 0,
+      autoReconnect: { enabled: false, maxRetries: 3, interval: 2000 }
     }
 
     tabs.value.push(newTab)
@@ -132,6 +138,7 @@ export function useTabs() {
     if (tab) {
       tab.receiveData = []
       tab.receiveCount = 0
+      tab.frozenReceiveData = []
     }
   }
 

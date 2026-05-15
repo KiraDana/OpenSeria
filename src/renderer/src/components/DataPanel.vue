@@ -5,6 +5,29 @@
         <div class="section-header">
           <span class="section-title">{{ i18n.t('receiveArea') }}</span>
           <div class="section-actions">
+            <el-input
+              v-model="searchQuery"
+              :placeholder="i18n.t('search')"
+              size="small"
+              clearable
+              style="width: 130px;"
+              @input="onSearchInput"
+            />
+            <el-button size="small" :disabled="matchIndices.length === 0" @click="goToPrevMatch" :title="i18n.t('search')">
+              <el-icon><ArrowUp /></el-icon>
+            </el-button>
+            <span v-if="matchIndices.length > 0" class="match-counter">{{ currentMatchIndex + 1 }}/{{ matchIndices.length }}</span>
+            <el-button size="small" :disabled="matchIndices.length === 0" @click="goToNextMatch" :title="i18n.t('search')">
+              <el-icon><ArrowDown /></el-icon>
+            </el-button>
+            <el-select v-model="filterDirection" size="small" style="width: 90px;">
+              <el-option value="all" :label="i18n.t('filterAll')" />
+              <el-option value="receive" :label="i18n.t('filterReceive')" />
+              <el-option value="send" :label="i18n.t('filterSend')" />
+            </el-select>
+            <el-button size="small" :type="receivingPaused ? 'warning' : ''" @click="toggleReceiving">
+              {{ receivingPaused ? i18n.t('resumeReceiving') : i18n.t('stopReceiving') }}
+            </el-button>
             <el-button size="small" @click="$emit('clear-receive')">
               <el-icon><Delete /></el-icon>{{ i18n.t('clear') }}
             </el-button>
@@ -12,15 +35,21 @@
         </div>
         <div class="receive-area" ref="receiveAreaRef">
           <div
-            v-for="(item, index) in displayReceiveData"
+            v-for="(item, index) in filteredByDirection"
             :key="index"
-            class="data-row"
+            :data-row-index="index"
+            :class="['data-row', { 'row-match': isMatch(index) }]"
           >
             <span class="receive-arrow">{{ item.direction === 'send' ? '→' : '←' }}</span>
             <span class="timestamp">{{ formatTime(item.timestamp) }}</span>
-            <span :class="['data-content', item.direction === 'send' ? 'send-data' : 'receive-data']">{{ formatData(item.data, sendFormat) }}</span>
+            <span :class="['data-content', item.direction === 'send' ? 'send-data' : 'receive-data']">
+              <template v-for="(part, pi) in highlightText(formatData(item.data, sendFormat))" :key="pi">
+                <mark v-if="part.highlight">{{ part.text }}</mark>
+                <span v-else>{{ part.text }}</span>
+              </template>
+            </span>
           </div>
-          <div v-if="!displayReceiveData.length" class="empty-hint">
+          <div v-if="!filteredByDirection.length" class="empty-hint">
             {{ i18n.t('waitingData') }}
           </div>
         </div>
@@ -44,17 +73,23 @@
           </div>
         </div>
 
-        <div class="crc-section" v-if="sendFormat === 'hex'">
-          <el-checkbox v-model="enableCrc" size="small">{{ i18n.t('appendCrc') }}</el-checkbox>
-          <el-select v-if="enableCrc" v-model="crcType" size="small" style="width: 80px;">
+        <div class="crc-section">
+          <el-checkbox v-model="enableCrc" size="small" v-if="sendFormat === 'hex'">{{ i18n.t('appendCrc') }}</el-checkbox>
+          <el-select v-if="enableCrc && sendFormat === 'hex'" v-model="crcType" size="small" style="width: 80px;">
             <el-option value="crc8" :label="i18n.t('crc8')" />
             <el-option value="crc16" :label="i18n.t('crc16')" />
             <el-option value="xor" :label="i18n.t('xor')" />
             <el-option value="lrc" :label="i18n.t('lrc')" />
           </el-select>
-          <el-select v-if="enableCrc && crcType === 'crc16'" v-model="crcByteOrder" size="small" style="width: 100px;">
+          <el-select v-if="enableCrc && crcType === 'crc16' && sendFormat === 'hex'" v-model="crcByteOrder" size="small" style="width: 100px;">
             <el-option value="high-first" :label="i18n.t('highFirst')" />
             <el-option value="low-first" :label="i18n.t('lowFirst')" />
+          </el-select>
+          <el-divider direction="vertical" />
+          <el-checkbox v-model="autoNewlineEnabled" size="small">{{ i18n.t('autoNewline') }}</el-checkbox>
+          <el-select v-if="autoNewlineEnabled" v-model="autoNewlineType" size="small" style="width: 90px;">
+            <el-option value="crlf" :label="i18n.t('newlineCrlf')" />
+            <el-option value="lf" :label="i18n.t('newlineLf')" />
           </el-select>
         </div>
 
@@ -193,6 +228,29 @@ const enableCrc = ref(false)
 const crcType = ref('crc16')
 const crcByteOrder = ref('low-first')
 const receiveAreaRef = ref<HTMLElement | null>(null)
+
+const receivingPaused = computed({
+  get: () => props.tab?.receivingPaused ?? false,
+  set: (val) => { if (props.tab) props.tab.receivingPaused = val }
+})
+
+const searchQuery = computed({
+  get: () => props.tab?.searchQuery ?? '',
+  set: (val) => { if (props.tab) props.tab.searchQuery = val }
+})
+
+const filterDirection = computed({
+  get: () => (props.tab?.filterDirection ?? 'all') as 'all' | 'receive' | 'send',
+  set: (val) => { if (props.tab) props.tab.filterDirection = val }
+})
+
+const currentMatchIndex = computed({
+  get: () => props.tab?.currentMatchIndex ?? 0,
+  set: (val) => { if (props.tab) props.tab.currentMatchIndex = val }
+})
+
+const autoNewlineEnabled = ref(false)
+const autoNewlineType = ref<'crlf' | 'lf'>('crlf')
 const presets = ref<string[]>(Array(99).fill(''))
 const presetSelected = ref<boolean[]>(Array(99).fill(false))
 const presetFormats = ref<DataFormat[]>(Array(99).fill('ascii'))
@@ -215,9 +273,92 @@ const hasSelectedPresets = computed(() => {
 })
 
 const displayReceiveData = computed(() => {
-  if (!props.tab?.receiveData) return []
-  return props.tab.receiveData.slice(-500)
+  const tab = props.tab
+  if (!tab?.receiveData) return []
+  if (receivingPaused.value) return tab.frozenReceiveData
+  return tab.receiveData.slice(-500)
 })
+
+const filteredByDirection = computed(() => {
+  const data = displayReceiveData.value
+  if (filterDirection.value === 'all') return data
+  return data.filter(item => {
+    const dir = item.direction || 'receive'
+    return dir === filterDirection.value
+  })
+})
+
+const matchIndices = computed(() => {
+  if (!searchQuery.value) return []
+  const query = searchQuery.value.toLowerCase()
+  return filteredByDirection.value.reduce((indices, item, idx) => {
+    const text = formatData(item.data, sendFormat.value).toLowerCase()
+    if (text.includes(query)) indices.push(idx)
+    return indices
+  }, [] as number[])
+})
+
+function toggleReceiving(): void {
+  if (receivingPaused.value) {
+    receivingPaused.value = false
+  } else {
+    receivingPaused.value = true
+    if (props.tab?.receiveData) {
+      props.tab.frozenReceiveData = props.tab.receiveData.slice(-500)
+    }
+  }
+}
+
+function onSearchInput(): void {
+  currentMatchIndex.value = 0
+}
+
+function isMatch(index: number): boolean {
+  return matchIndices.value.includes(index)
+}
+
+function goToPrevMatch(): void {
+  if (matchIndices.value.length === 0) return
+  currentMatchIndex.value = (currentMatchIndex.value - 1 + matchIndices.value.length) % matchIndices.value.length
+  scrollToMatch(matchIndices.value[currentMatchIndex.value])
+}
+
+function goToNextMatch(): void {
+  if (matchIndices.value.length === 0) return
+  currentMatchIndex.value = (currentMatchIndex.value + 1) % matchIndices.value.length
+  scrollToMatch(matchIndices.value[currentMatchIndex.value])
+}
+
+function scrollToMatch(index: number): void {
+  const area = receiveAreaRef.value
+  if (!area) return
+  const row = area.querySelector(`[data-row-index="${index}"]`) as HTMLElement
+  if (row) {
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
+function highlightText(text: string): { text: string; highlight: boolean }[] {
+  const query = searchQuery.value
+  if (!query) return [{ text, highlight: false }]
+  const lowerText = text.toLowerCase()
+  const lowerQuery = query.toLowerCase()
+  const parts: { text: string; highlight: boolean }[] = []
+  let start = 0
+  let index = lowerText.indexOf(lowerQuery, start)
+  while (index !== -1) {
+    if (index > start) {
+      parts.push({ text: text.slice(start, index), highlight: false })
+    }
+    parts.push({ text: text.slice(index, index + query.length), highlight: true })
+    start = index + query.length
+    index = lowerText.indexOf(lowerQuery, start)
+  }
+  if (start < text.length) {
+    parts.push({ text: text.slice(start), highlight: false })
+  }
+  return parts
+}
 
 function getWorker(): Worker | null {
   if (!cyclicWorker && typeof Worker !== 'undefined') {
@@ -530,6 +671,14 @@ async function handleSend(): Promise<void> {
     }
   }
 
+  if (autoNewlineEnabled.value) {
+    if (autoNewlineType.value === 'crlf') {
+      dataToSend += '0D0A'
+    } else {
+      dataToSend += '0A'
+    }
+  }
+
   emit('send', dataToSend)
 }
 
@@ -556,6 +705,7 @@ async function handleSaveData(): Promise<void> {
 }
 
 watch(() => props.tab?.receiveData, async () => {
+  if (receivingPaused.value) return
   await nextTick()
   requestAnimationFrame(() => {
     if (receiveAreaRef.value) {
@@ -919,5 +1069,23 @@ defineOptions({
 
 .receive-data {
   color: var(--receive-color);
+}
+
+.row-match {
+  background-color: rgba(255, 255, 0, 0.15);
+  border-radius: 2px;
+}
+
+.match-counter {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+mark {
+  background-color: #ffdd57;
+  color: #333;
+  padding: 0 1px;
+  border-radius: 1px;
 }
 </style>

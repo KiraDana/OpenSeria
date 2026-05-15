@@ -70,6 +70,21 @@
           {{ i18n.t('disconnect') }}
         </el-button>
       </el-form-item>
+
+      <el-divider style="margin: 8px 0;" />
+      <div class="auto-reconnect-section">
+        <el-checkbox v-model="localAutoReconnect.enabled" size="small" :disabled="connectionStatus === 'connected'">
+          {{ i18n.t('autoReconnect') }}
+        </el-checkbox>
+        <div v-if="localAutoReconnect.enabled" class="reconnect-details">
+          <el-form-item :label="i18n.t('reconnectRetries')" size="small">
+            <el-input-number v-model="localAutoReconnect.maxRetries" :min="1" :max="99" size="small" />
+          </el-form-item>
+          <el-form-item :label="i18n.t('reconnectInterval')" size="small">
+            <el-input-number v-model="localAutoReconnect.interval" :min="500" :max="60000" :step="500" size="small" />
+          </el-form-item>
+        </div>
+      </div>
     </el-form>
 
       <div class="refresh-ports">
@@ -84,7 +99,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
 import { i18n } from '@/composables/useI18n'
-import type { Tab, ConnectionStatus, SerialConfig, SerialPortInfo } from '@/types'
+import type { Tab, ConnectionStatus, SerialConfig, SerialPortInfo, AutoReconnectConfig } from '@/types'
 
 const props = defineProps<{
   tab: Tab | null
@@ -107,6 +122,7 @@ const localConfig = ref<SerialConfig>({
 })
 const availablePorts = ref<SerialPortInfo[]>([])
 const isRefreshing = ref(false)
+const localAutoReconnect = ref<AutoReconnectConfig>({ enabled: false, maxRetries: 3, interval: 2000 })
 
 const baudRates = [
   110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 38400,
@@ -132,6 +148,9 @@ async function refreshPorts(): Promise<void> {
 
 function handleConnect(): void {
   const config = { ...localConfig.value }
+  if (props.tab) {
+    props.tab.autoReconnect = { ...localAutoReconnect.value }
+  }
   emit('connect', config)
 }
 
@@ -142,6 +161,7 @@ watch(collapsed, (val) => {
 watch(() => props.tab, (newTab) => {
   if (newTab) {
     localConfig.value = { ...newTab.config } as SerialConfig
+    localAutoReconnect.value = { ...(newTab.autoReconnect || { enabled: false, maxRetries: 3, interval: 2000 }) }
   }
 }, { immediate: true })
 
@@ -215,6 +235,23 @@ defineOptions({
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.auto-reconnect-section {
+  padding: 0 0 8px 0;
+}
+
+.reconnect-details {
+  margin-top: 8px;
+  padding-left: 8px;
+}
+
+.reconnect-details .el-form-item {
+  margin-bottom: 8px;
+}
+
+.reconnect-details .el-input-number {
+  width: 120px;
 }
 </style>
 

@@ -68,6 +68,8 @@ const { connect, disconnect, send: sendData } = useConnection()
 
 const leftCollapsed = ref(false)
 const currentErrorMessage = ref('')
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let isManualDisconnect = false
 
 const currentConnectionStatus = computed<ConnectionStatus>(() => {
   if (!activeTab.value) return 'disconnected'
@@ -90,6 +92,7 @@ async function handleConnect(config: SerialConfig): Promise<void> {
   const tab = activeTab.value
   if (!tab) return
 
+  isManualDisconnect = false
   updateTabConfig(tab.id, config)
 
   const success = await connect(tab)
@@ -102,6 +105,11 @@ async function handleDisconnect(): Promise<void> {
   const tab = activeTab.value
   if (!tab) return
 
+  isManualDisconnect = true
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
   setCyclicSending(tab.id, false)
   await disconnect(tab)
 }
@@ -153,6 +161,42 @@ function handleShowError(message: string): void {
   ElMessage.error(message)
 }
 
+async function reconnectTab(tab: Tab): Promise<boolean> {
+  if (tab.status === 'connected') return true
+  updateTabStatus(tab.id, 'connecting')
+  const success = await connect(tab)
+  if (success) {
+    currentErrorMessage.value = ''
+  }
+  return success
+}
+
+function startAutoReconnect(tab: Tab): void {
+  let attempts = 0
+  const maxRetries = tab.autoReconnect?.maxRetries ?? 3
+  const interval = tab.autoReconnect?.interval ?? 2000
+
+  updateTabStatus(tab.id, 'connecting')
+
+  const tryReconnect = async () => {
+    if (isManualDisconnect) return
+    if (attempts >= maxRetries) {
+      updateTabStatus(tab.id, 'disconnected')
+      currentErrorMessage.value = i18n.t('reconnectFailed') + maxRetries + i18n.t('times')
+      ElMessage.error(i18n.t('reconnectFailed') + maxRetries + i18n.t('times'))
+      return
+    }
+    attempts++
+    ElMessage.info(i18n.t('autoReconnecting') + ` (${attempts}/${maxRetries})`)
+    const success = await reconnectTab(tab)
+    if (!success && !isManualDisconnect) {
+      reconnectTimer = setTimeout(tryReconnect, interval)
+    }
+  }
+
+  tryReconnect()
+}
+
 function handleClearReceive(): void {
   const tab = activeTab.value
   if (tab) {
@@ -182,8 +226,12 @@ function setupDataListeners(): void {
       if (tab) {
         setCyclicSending(tab.id, false)
         updateTabStatus(tab.id, 'disconnected', undefined)
-        currentErrorMessage.value = i18n.t('portDisconnected') + data.data
-        ElMessage.error(i18n.t('portDisconnected') + data.data)
+        if (data.type === 'disconnected' && !isManualDisconnect && tab.autoReconnect?.enabled) {
+          startAutoReconnect(tab)
+        } else {
+          currentErrorMessage.value = i18n.t('portDisconnected') + data.data
+          ElMessage.error(i18n.t('portDisconnected') + data.data)
+        }
       }
       return
     }

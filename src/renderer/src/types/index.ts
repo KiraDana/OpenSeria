@@ -47,9 +47,21 @@ export interface Tab {
   presetSelected: boolean[]
   showTimestamp: boolean
   presetCollapsed: boolean
+  receivingPaused: boolean
+  frozenReceiveData: DataItem[]
+  searchQuery: string
+  filterDirection: 'all' | 'receive' | 'send'
+  currentMatchIndex: number
+  autoReconnect: AutoReconnectConfig
 }
 
 export type DataFormat = 'hex' | 'ascii'
+
+export interface AutoReconnectConfig {
+  enabled: boolean
+  maxRetries: number
+  interval: number
+}
 
 export interface SerialPortInfo {
   path: string

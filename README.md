@@ -1,7 +1,7 @@
 # OpenSerial - 开源跨平台串口调试助手
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.0.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-orange" alt="Platform">
 </p>
@@ -26,6 +26,10 @@ OpenSerial 是嵌入式工程师打造的开源免费跨平台串口调试助手
 - ✅ **CRC 校验** - 内置 CRC8/CRC16/XOR/LRC 校验算法
 - ✅ **循环发送** - 支持定时循环发送预设数据
 - ✅ **预设管理** - 99 条预设数据槽位，每个窗口独立管理
+- ✅ **停止接收** 🔥 - 点击停止接收按钮冻结接收区显示，继续接收后展示所有累积数据，每个窗口独立管理
+- ✅ **搜索过滤** 🔥 - 支持接收区内容搜索和高亮跳转，可按方向过滤（仅显示接收/仅显示发送），每个窗口独立管理
+- ✅ **自动重连** 🔥 - 断线后自动重连，可设置重连次数和间隔时间
+- ✅ **自动换行符** - 发送时自动追加 CR+LF 或 LF 换行符
 - ✅ **界面可折叠** - 连接参数和预设面板可折叠，最大化数据显示区
 - ✅ **中英文切换** - 支持中文/英文界面切换
 - ✅ **无广告无付费** - 纯净体验，所有功能完全免费

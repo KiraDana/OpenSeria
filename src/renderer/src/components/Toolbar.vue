@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="toolbar-right">
-      <el-tag size="small" type="info">v1.0.0</el-tag>
+      <el-tag size="small" type="info">v1.0.1</el-tag>
       <el-button class="lang-toggle" size="small" @click="toggleLang" :title="i18n.language === 'zh' ? 'Switch to English' : '切换到中文'">
         {{ i18n.language === 'zh' ? '中' : 'EN' }}
       </el-button>

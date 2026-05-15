@@ -1,7 +1,5 @@
 export { useTabs } from './useTabs'
 export { useSerial } from './useSerial'
-export { useTcp } from './useTcp'
-export { useUdp } from './useUdp'
 export { useConnection } from './useConnection'
 export { usePresets } from './usePresets'
 export { useCyclicSend } from './useCyclicSend'

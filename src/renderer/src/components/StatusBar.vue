@@ -18,11 +18,11 @@
 
     <div class="status-right">
       <span class="status-item">
-        <span class="receive-label">{{ i18n.t('receive') }}:</span>
+        <span class="receive-label">{{ i18n.t('rx') }}:</span>
         <span class="receive-count">{{ formatCount(tab?.receiveCount || 0) }}</span>
       </span>
       <span class="status-item">
-        <span class="send-label">{{ i18n.t('send') }}:</span>
+        <span class="send-label">{{ i18n.t('tx') }}:</span>
         <span class="send-count">{{ formatCount(tab?.sendCount || 0) }}</span>
       </span>
     </div>
